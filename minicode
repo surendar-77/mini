@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthDialect - Clearer Conversations, Better Care</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom Styles -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .chat-bubble-patient {
+            background-color: #e0f2fe; /* sky-100 */
+            align-self: flex-start;
+        }
+        .chat-bubble-doctor {
+            background-color: #dcfce7; /* green-100 */
+            align-self: flex-end;
+        }
+        .btn-primary {
+            @apply w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200;
+        }
+        .btn-secondary {
+            @apply w-full bg-slate-200 text-slate-800 font-semibold py-3 px-4 rounded-lg hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400 transition-all duration-200;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+    <div id="app-container" class="w-full max-w-md mx-auto bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-slate-200">
+        
+        <!-- App Header -->
+        <header class="text-center mb-6">
+            <h1 class="text-3xl font-bold text-slate-800">HealthDialect</h1>
+            <p class="text-slate-500 mt-1">Clearer Conversations, Better Care.</p>
+        </header>
+
+        <!-- Loading Spinner -->
+        <div id="loading" class="text-center py-10">
+            <svg class="animate-spin h-8 w-8 text-indigo-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="mt-2 text-slate-500">Initializing...</p>
+        </div>
+
+        <!-- Login View -->
+        <div id="login-view" class="hidden">
+            <p class="text-center text-slate-600 mb-6">Please sign in with your Google account to continue.</p>
+            <button id="login-btn" class="btn-primary flex items-center justify-center gap-3">
+                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><defs><path id="a" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></defs><clipPath id="b"><use xlink:href="#a" overflow="visible"/></clipPath><path clip-path="url(#b)" fill="#FBBC05" d="M0 37V11l17 13z"/><path clip-path="url(#b)" fill="#EA4335" d="M0 11l17 13 7-6.1L48 14V0H0z"/><path clip-path="url(#b)" fill="#34A853" d="M0 37l30-23 7.9 1L48 0v48H0z"/><path clip-path="url(#b)" fill="#4285F4" d="M48 48L17 24l-4-3 35-10z"/></svg>
+                Sign in with Google
+            </button>
+        </div>
+
+        <!-- Role Selection View -->
+        <div id="role-selection-view" class="hidden">
+            <h2 class="text-xl font-semibold text-center text-slate-700 mb-4">Welcome!</h2>
+            <p class="text-center text-slate-600 mb-6">To personalize your experience, please select your role.</p>
+            <div class="space-y-4">
+                <button id="select-doctor-btn" class="btn-primary">I am a Doctor</button>
+                <button id="select-patient-btn" class="btn-secondary">I am a Patient</button>
+            </div>
+        </div>
+        
+        <!-- Main App View (Chat) -->
+        <div id="main-app-view" class="hidden">
+            <!-- User Header -->
+            <div class="flex items-center justify-between mb-4 border-b pb-3">
+                <div class="flex items-center gap-3">
+                    <img id="user-photo" src="https://placehold.co/40x40/e2e8f0/64748b?text=U" class="w-10 h-10 rounded-full" alt="User Photo">
+                    <div>
+                        <p id="user-name" class="font-semibold text-slate-800">User Name</p>
+                        <p id="user-role" class="text-sm text-indigo-600 font-medium bg-indigo-100 px-2 py-0.5 rounded-full inline-block">Role</p>
+                    </div>
+                </div>
+                <button id="logout-btn" class="text-slate-500 hover:text-slate-800 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                </button>
+            </div>
+
+            <!-- Chat Area -->
+            <div id="chat-window" class="h-80 overflow-y-auto bg-slate-100 rounded-lg p-4 mb-4 flex flex-col gap-4">
+                <!-- Chat messages will be dynamically inserted here -->
+            </div>
+
+            <!-- Message Input -->
+            <form id="message-form" class="flex gap-2">
+                <input id="message-input" type="text" placeholder="Type your message..." class="flex-grow p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
+                <button type="submit" class="bg-indigo-600 text-white p-3 rounded-lg hover:bg-indigo-700 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Your provided Firebase configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyAoy3SIG9LyADQqn5Z5sO4fpNbxEeiy0LA",
+          authDomain: "healthdialect.firebaseapp.com",
+          projectId: "healthdialect",
+          storageBucket: "healthdialect.appspot.com",
+          messagingSenderId: "1068145612430",
+          appId: "1:1068145612430:web:b5a9fdea2c8c4462c1dbdf",
+          measurementId: "G-P51PLVDMLP"
+        };
+
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { 
+            getAuth, 
+            GoogleAuthProvider, 
+            signInWithRedirect,
+            signOut, 
+            onAuthStateChanged,
+            getRedirectResult
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc, 
+            getDoc, 
+            setDoc,
+            collection,
+            addDoc,
+            query,
+            orderBy,
+            onSnapshot
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // --- INITIALIZATION ---
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        // --- DOM ELEMENTS ---
+        const loadingEl = document.getElementById('loading');
+        const loginViewEl = document.getElementById('login-view');
+        const roleSelectionViewEl = document.getElementById('role-selection-view');
+        const mainAppViewEl = document.getElementById('main-app-view');
+        
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const selectDoctorBtn = document.getElementById('select-doctor-btn');
+        const selectPatientBtn = document.getElementById('select-patient-btn');
+
+        const userPhotoEl = document.getElementById('user-photo');
+        const userNameEl = document.getElementById('user-name');
+        const userRoleEl = document.getElementById('user-role');
+
+        const chatWindow = document.getElementById('chat-window');
+        const messageForm = document.getElementById('message-form');
+        const messageInput = document.getElementById('message-input');
+
+        let currentUser = null;
+        let userProfile = null;
+        let unsubscribeChat = null;
+
+        // --- UI MANAGEMENT ---
+        function showView(viewId) {
+            ['loading', 'login-view', 'role-selection-view', 'main-app-view'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(viewId).classList.remove('hidden');
+        }
+
+        // --- AUTHENTICATION ---
+        loginBtn.addEventListener('click', async () => {
+            try {
+                await signInWithRedirect(auth, provider);
+            } catch (error) {
+                console.error("Error starting sign-in redirect:", error);
+            }
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                if (unsubscribeChat) unsubscribeChat();
+                await signOut(auth);
+            } catch (error) {
+                console.error("Error signing out:", error);
+            }
+        });
+        
+        async function handleRedirectResult() {
+            try {
+                const result = await getRedirectResult(auth);
+                if (result) {
+                    console.log("Redirect result handled for user:", result.user.displayName);
+                }
+            } catch (error) {
+                console.error("Error handling redirect result:", error);
+            }
+        }
+        
+        handleRedirectResult();
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                await checkUserProfile();
+            } else {
+                currentUser = null;
+                userProfile = null;
+                showView('login-view');
+            }
+        });
+
+        // --- DATABASE & USER PROFILE ---
+        async function checkUserProfile() {
+            const userDocRef = doc(db, "users", currentUser.uid);
+            const userDocSnap = await getDoc(userDocRef);
+
+            if (userDocSnap.exists()) {
+                userProfile = userDocSnap.data();
+                setupMainAppUI();
+                showView('main-app-view');
+                loadChatMessages();
+            } else {
+                showView('role-selection-view');
+            }
+        }
+
+        async function setUserRole(role) {
+            const userDocRef = doc(db, "users", currentUser.uid);
+            const profileData = {
+                uid: currentUser.uid,
+                displayName: currentUser.displayName,
+                email: currentUser.email,
+                photoURL: currentUser.photoURL,
+                role: role
+            };
+            try {
+                await setDoc(userDocRef, profileData);
+                await checkUserProfile();
+            } catch (error) {
+                console.error("Error setting user role:", error);
+            }
+        }
+
+        selectDoctorBtn.addEventListener('click', () => setUserRole('Doctor'));
+        selectPatientBtn.addEventListener('click', () => setUserRole('Patient'));
+
+        // --- MAIN APP LOGIC (CHAT) ---
+        function setupMainAppUI() {
+            userNameEl.textContent = userProfile.displayName;
+            userPhotoEl.src = userProfile.photoURL;
+            userRoleEl.textContent = userProfile.role;
+        }
+
+        function loadChatMessages() {
+            const conversationId = "global_chat";
+            const messagesRef = collection(db, "conversations", conversationId, "messages");
+            const q = query(messagesRef, orderBy("timestamp"));
+
+            unsubscribeChat = onSnapshot(q, (querySnapshot) => {
+                chatWindow.innerHTML = '';
+                querySnapshot.forEach((doc) => {
+                    appendMessage(doc.data());
+                });
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            });
+        }
+
+        function appendMessage(msgData) {
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('p-3', 'rounded-lg', 'max-w-xs', 'break-words');
+            
+            if (msgData.role === 'Patient') {
+                msgDiv.classList.add('chat-bubble-patient');
+            } else {
+                msgDiv.classList.add('chat-bubble-doctor');
+            }
+            
+            if(msgData.uid === currentUser.uid) {
+                msgDiv.classList.add('self-end');
+            } else {
+                msgDiv.classList.add('self-start');
+            }
+
+            msgDiv.textContent = msgData.text;
+            chatWindow.appendChild(msgDiv);
+        }
+
+        messageForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const messageText = messageInput.value.trim();
+            if (messageText === '') return;
+
+            const conversationId = "global_chat";
+            const messagesRef = collection(db, "conversations", conversationId, "messages");
+
+            try {
+                await addDoc(messagesRef, {
+                    text: messageText,
+                    uid: currentUser.uid,
+                    displayName: userProfile.displayName,
+                    role: userProfile.role,
+                    timestamp: new Date()
+                });
+                messageInput.value = '';
+            } catch (error) {
+                console.error("Error sending message:", error);
+            }
+        });
+        
+        showView('loading');
+    </script>
+</body>
+</html>
